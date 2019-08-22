@@ -12,8 +12,10 @@ export default class App extends Component {
       idade: '',
       tokenInput: "",
       nomeInput: "",
-      idadeInput: ""
+      idadeInput: "",
+      lista: []
     };
+
 
     let firebaseConfig = {
       apiKey: "AIzaSyAxiD6vqmIM_QA6HXNU7tBOTrdZsWtdNms",
@@ -27,60 +29,26 @@ export default class App extends Component {
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
-    // observer firebase node
-    firebase.database().ref('token')
-      .on('value', (snapshot) => {
-        let state = this.state;
-        state.token = snapshot.val();
+    this.cadastrar = this.cadastrar.bind(this);
 
-        this.setState(state);
-      });
-    
-    // not observer firebase node
-    // firebase.database().ref('token')
-    //   .once('value').then((snapshot) => {
-    //     let state = this.state;
-    //     state.token = snapshot.val();
+    firebase.database().ref('Usuarios').on('value', (snapshot) => {
+      let state = this.state;
+      state.lista = [];
 
-    //     this.setState(state);
-    //   });
-
-    firebase.database()
-      .ref('Usuarios').child(1)
-      .on('value', (snapshot) => {
-        let state = this.state;
-        state.nome = snapshot.val().nome;
-        state.idade = snapshot.val().idade;
-
-        this.setState(state);
+      snapshot.forEach((childrenItem) => {
+        state.lista.push({
+          key: childrenItem.key,
+          nome: childrenItem.val().nome,
+          idade: childrenItem.val().idade
+        });
       });
 
-      this.cadastrar = this.cadastrar.bind(this);
+      this.setState(state);
+      console.log(this.state.lista);
+    });
   }
 
   cadastrar(e){
-    // firebase.database().ref('token')
-    //  .set(this.state.tokenInput);
-
-    // firebase.database().ref('Usuarios')
-    //   .child(1).child('idade')
-    //   .set(this.state.tokenInput);
-
-    // firebase.database().ref('Usuarios')
-    // .child(1).child('cargo').set(this.state.tokenInput);
-
-
-    // firebase.database().ref('Usuarios')
-    // .child(1).child('cargo').remove();
-
-    let state = this.state;
-
-    let usuarios = firebase.database().ref('Usuarios');
-    let chave = usuarios.push().key;
-    usuarios.child(chave).set({
-      nome: state.nomeInput,
-      idade: state.idadeInput
-    });
     
     e.preventDefault();
   }
@@ -89,23 +57,14 @@ export default class App extends Component {
     const { token, nome, idade } = this.state;
     return (
       <div>
-        <form onSubmit={ this.cadastrar }>
-          Nome:<br/>
-          <input type="text" value={ this.state.nomeInput } 
-            onChange={ (e) => this.setState({nomeInput: e.target.value}) } />
-          <br/>
-          Idade:<br />
-          <input type="text" value={ this.state.idadeInput } 
-            onChange={ (e) => this.setState({idadeInput: e.target.value}) } />
-          <br />
-          <button type="submit">
-            Cadastrar
-          </button>
-        </form>
-
-        <h1>Token: { token }</h1>
-        <h2>Nome: { nome }</h2>
-        <h2>Idade: { idade }</h2>
+        { this.state.lista.map((item) => {
+          return(
+            <ul key={ item.key }>
+              <li> Nome: { item.nome } </li>
+              <li> idade: { item.idade } </li>
+            </ul>
+          );
+        }) }
       </div>
     );
   }
